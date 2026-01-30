@@ -55,34 +55,65 @@ export const signup = async (req, res) => {
 
     setCookies(res, accessToken, refreshToken);
 
-    res
-      .status(200)
-      .json({ success: true, message: "User created successfully", user:{
+    res.status(200).json({
+      success: true,
+      message: "User created successfully",
+      user: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
-      } });
+        role: user.role,
+      },
+    });
   } catch (error) {
-    res.status(500).json(error.message);
+    console.log("Error in sign up Controller", error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const login = async (req, res) => {
-  res.send("login route called");
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (user && (await user.comparePassword(password))) {
+      const { accessToken, refreshToken } = generateTokens(user._id);
+
+      await storeRefreshToken(user._id, refreshToken);
+      setCookies(res, accessToken, refreshToken);
+
+      res.status(200).json({
+        success: true,
+        message: "Login Successfull",
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    }
+  } catch (error) {
+    console.log("Error in login Controller", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 export const logout = async (req, res) => {
   try {
-    const refreshToken = req.cookies.refreshToken
-    if(refreshToken){
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
-        await redis.del(`refresh_token: ${decoded.userId}`)
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET,
+      );
+      await redis.del(`refreshToken: ${decoded.userId}`);
     }
     res.clearCookie("accessToken");
-    res.clearCookie("refreshToken")
-    res.status(200).json({success:true, message: "logged out successfully"})
+    res.clearCookie("refreshToken");
+    res.status(200).json({ success: true, message: "logged out successfully" });
   } catch (error) {
-    res.status(500).json({message:"Server error", error:error.message})
+    console.log("Error in logout Controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
