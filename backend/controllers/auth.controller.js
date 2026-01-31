@@ -150,3 +150,7 @@ export const refreshToken = async(req, res)=>{
     res.status(500).json({success:false, message:"Server error", error: error.message})
   }
 }
+
+export const getProfile = async(req,res) => {
+  
+}
