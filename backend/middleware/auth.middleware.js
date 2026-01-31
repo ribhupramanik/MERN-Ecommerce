@@ -1,26 +1,46 @@
-import jwt from "jsonwebtoken"
-import User from "../models/user.model.js"
+import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
 
-export const protectRoute = async(req, res, next) => {
+export const protectRoute = async (req, res, next) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+      return res(401).json({
+        message: "Unauthorized - No Access token provided",
+      });
+    }
+
     try {
-        const accessToken = req.cookies.accessToken
-        if(!accessToken) {
-            return res(401).json({message: "Unauthorized - No Access token provided"})
-        }
+      const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+      const user = await User.findById(decoded.userId).select("-passowrd");
 
-        const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
-        const user = await User.findById(decoded.userId).select("-passowrd");
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
 
-        if(!user){
-            return res.status(401).json({message: "User not found"})
-        }
+      req.user = user;
 
-        req.user = user
-
-        next()
-
+      next();
     } catch (error) {
-        console.log("Error in protectRoute middleware", error.message)
-        return res.status(401).json({message:"Unauthorized - Invalid access token"})
+      if (error.name === "TokenExpiredError") {
+        return res
+          .status(401)
+          .json({ message: "Unauthorized -Access token expired" });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.log("Error in protectRoute middleware", error.message);
+    return res
+      .status(401)
+      .json({ message: "Unauthorized - Invalid access token" });
+  }
+};
+
+export const adminRoute = (req,res, next) => {
+    if(req.user && req.user.roel === 'admin'){
+        next()
+    }else{
+        return res.status(403).json({message:"Access Denied - Admin Only"})
     }
 }
