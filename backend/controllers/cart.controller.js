@@ -1,9 +1,11 @@
+import Product from "../models/product.model";
+
 export const addToCart = async (req,res) => {
     try {
         const {productId} = req.body;
         const user = req.user
 
-        const existingItem = user.cartItems.find((cartItem) => cartItem.id === product.id)
+        const existingItem = user.cartItems.find((item) => item.id === productId)
 
         if(existingItem){
             existingItem.quantity += 1
@@ -61,5 +63,15 @@ export const updateQuantity = async (req,res) => {
 }
 
 export const getCartProducts = async (req,res) => {
-
+    try {
+        const products = await Product.find({_id:{$in:req.user.cartItems}})
+        const cartItems = products.map(product => {
+            const item = req.user.cartItems.find(cartItem => cartItem.id === product.id)
+            return {...product.toJSON(), quantity:item.quantity}
+        })
+        res.json(cartItems)
+    } catch (error) {
+        console.log("Error in getCartProducts controller", error.message)
+        res.status(500).json({message: "Server error", error: error.message})
+    }
 }
