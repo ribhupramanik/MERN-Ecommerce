@@ -1,50 +1,56 @@
-import React from 'react'
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Upload, Loader } from "lucide-react";
+import { useProductStore } from "../stores/useProductStore";
 
 const categories = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "suits", "bags"];
 
-
 const CreateProductForm = () => {
-  	const [newProduct, setNewProduct] = useState({
+	const [newProduct, setNewProduct] = useState({
 		name: "",
 		description: "",
 		price: "",
 		category: "",
 		image: "",
 	});
-  const loading = false
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log(newProduct)
-  }
+	const { createProduct, loading } = useProductStore();
 
-  const handleImageChange = (e) => {
-		const file = e.target.files[0];
-		// if (file) {
-		// 	const reader = new FileReader();
-
-		// 	reader.onloadend = () => {
-		// 		setNewProduct({ ...newProduct, image: reader.result });
-		// 	};
-
-		// 	reader.readAsDataURL(file); // base64
-		// }
+	const handleSubmit = async (e) => {
+		e.preventDefault()
+		try {
+			await createProduct(newProduct);
+			setNewProduct({ name: "", description: "", price: "", category: "", image: "" });
+		} catch {
+			console.log("error creating a product");
+		}
 	};
 
-  return (
-    <motion.div
+	const handleImageChange = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+      
+
+			reader.onloadend = () => {
+				setNewProduct({ ...newProduct, image: reader.result });
+			};
+
+			reader.readAsDataURL(file); // base64
+		}
+	};
+
+	return (
+		<motion.div
 			className='bg-gray-800 shadow-lg rounded-lg p-8 mb-8 max-w-xl mx-auto'
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.8 }}
 		>
-      <h2 className='text-2xl font-semibold mb-6 text-emerald-300'>Create New Product</h2>
+			<h2 className='text-2xl font-semibold mb-6 text-emerald-300'>Create New Product</h2>
 
-      <form onSubmit={handleSubmit} className='space-y-4'>
-        <div>
+			<form onSubmit={handleSubmit} className='space-y-4'>
+				<div>
 					<label htmlFor='name' className='block text-sm font-medium text-gray-300'>
 						Product Name
 					</label>
@@ -150,10 +156,8 @@ const CreateProductForm = () => {
 						</>
 					)}
 				</button>
-      </form>
-
-    </motion.div>
-  )
-}
-
-export default CreateProductForm
+			</form>
+		</motion.div>
+	);
+};
+export default CreateProductForm;
