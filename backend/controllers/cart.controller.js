@@ -14,6 +14,7 @@ export const addToCart = async (req,res) => {
         }
 
         await user.save()
+        console.log('Product Added to cart')
         res.json(user.cartItems)
     } catch (error) {
         console.log("Error in addToCart controller", error.message)
