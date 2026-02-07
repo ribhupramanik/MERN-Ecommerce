@@ -10,7 +10,7 @@ const OrderSummary = () => {
   const savings = subtotal-total
   const formattedSubtotal = subtotal.toFixed(2)
   const formattedTotal = total.toFixed(2)
-  const totalSavings = savings.toFixed(2)
+  const formattedSavings = savings.toFixed(2)
 
   	const handlePayment = async () => {
       try {
